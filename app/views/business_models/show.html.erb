@@ -1,0 +1,90 @@
+<h1>Online courses websites</h1>
+
+<table class="table">
+  <tbody>
+  <% if current_user_admin? %>
+    <p>Ви увійшли як адміністратор</p>
+  <% else %>
+    <p>Ви увійшли як звичайний користувач</p>
+  <% end %>
+  <p>
+  <h3><%= @business_model.name %></p></h3>
+
+  <th>Розклад уроків:</th>
+  <tr>
+    <td><p><%= 'Тип урока:' %></p>
+      <p><%= 'Час урока:' %></p>
+      <p><%= 'Відвідуваність:' %></p>
+      <%= 'Оцінка:' unless current_user_admin? %></td>
+  <% @business_model.lessons.each do |lesson| %>
+      <td><p><%= lesson.lesson_type %></p>
+      <p><%= link_to lesson.lesson_time, user_lessons_path(lesson_id: lesson.id) if current_user_admin? %></p>
+      <p><%= lesson.lesson_time unless current_user_admin?%></p>
+      <% user_lesson = lesson.user_lessons&.find_by(user_id: current_user.id) %>
+      <p><%= user_lesson&.attendance %></p>
+      <%= user_lesson&.grade unless current_user_admin? %>
+      <%= button_to "Видалити урок", lesson_path(lesson.id, business_model_id: @business_model.id), method: :delete, class: "nav-link px-2 link-secondary fw-bold text-primary" if current_user_admin?%>
+      </td>
+  <% end %>
+  </tr>
+
+  <% if current_user_admin? %>
+    <h5><%= "Староста курсу: #{@captain.email}" if @captain%></h5>
+    <p></p>
+    <th>Користувачі які зареєстровані на курс:</th>
+    <td/>
+    <td/>
+    <td/>
+
+    <% @registered_users.each_with_index do |user, index| %>
+      <tr>
+        <td><%= index + 1 %></td>
+        <td><%= user.email %></td>
+        <td><%=
+          button_to "Зробити старостою",
+                    business_model_path(@business_model.id, captain_id: user.id),
+                    method: :put, form: { data: { confirm: "Are you sure?" } }, #ToDo: data confirmation doest work in rails 7
+                    class: "nav-link px-2 link-secondary fw-bold text-primary"
+        %></td>
+        <td><%=
+          button_to "Виписати з курсу",
+                    enrollment_path(user.enrollments.find_by(business_model_id: @business_model.id).id,
+                                    model_id: @business_model.id),
+                    method: :delete, form: { data: { confirm: "Are you sure?" } }, #ToDo: data confirmation doest work in rails 7
+                    class: "nav-link px-2 link-secondary fw-bold text-primary"
+        %></td>
+      </tr>
+    <% end %>
+    <th>Користувачі які не зареєстровані на курс:</th>
+    <td/>
+    <td/>
+    <% @unregistered_users.each_with_index do |user, index| %>
+      <tr>
+        <td><%= index + 1 %></td>
+        <td><%= user.email %></td>
+        <td><%= button_to "Записати на курс", enrollments_path(user_id: user.id, model_id: @business_model.id), class: "nav-link px-2 link-secondary fw-bold text-primary" %></td>
+      </tr>
+    <% end %>
+
+    <%= form_with model: UserLesson.new, local: true, url: user_lessons_path do |form| %>
+      <th>Додати урок</th>
+      <tr>
+        <td><div class="form-group">
+          <%= form.label :lesson_type %>
+          <%= form.text_field :lesson_type, class: "form-control" %>
+        </div>
+        <td><div class="form-group">
+          <%= form.label :lesson_time %>
+          <%= form.datetime_local_field :lesson_time, class: "form-control" %>
+        </div>
+          <div class="form-group">
+            <%= form.hidden_field :business_model_id, value: @business_model.id %>
+          </div>
+        <td><div class="form-group">
+          <%= form.submit "Create Lesson", class: "btn btn-success" %>
+        </div>
+      </tr>
+    <% end %>
+  <% end %>
+  </tbody>
+</table>

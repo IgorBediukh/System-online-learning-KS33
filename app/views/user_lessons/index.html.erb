@@ -1,0 +1,43 @@
+<h1>Online courses websites</h1>
+
+<table class="table">
+  <tbody>
+  <% if current_user_admin? %>
+    <p>Ви увійшли як адміністратор</p>
+  <% else %>
+    <p>Ви увійшли як звичайний користувач</p>
+  <% end %>
+  <p>
+
+  <h3><%= @lesson.business_model.name %></p></h3>
+  <h5><%= @lesson.lesson_type %> <%= @lesson.lesson_time %></h5>
+
+  <% if current_user_admin? %>
+    <th>Користувачі які зареєстровані на курс:</th>
+    <td/>
+    <td/>
+    <td/>
+
+    <tr>
+      <td><%= 'Індекс'%></td>
+      <td><%= 'Пошта' %></td>
+      <td><%= 'Оцінка' %></td>
+      <td><%= 'Відвідуваність' %></td>
+    </tr>
+    <% @user_lessons.each_with_index do |user_lesson, index| %>
+      <tr>
+        <td><%= index + 1 %></td>
+        <td><%= user_lesson.user.email %></td>
+        <td>
+          <%= form_with model: user_lesson, local: true, url: user_lesson_path(user_lesson), method: :patch do |form| %>
+            <%= form.number_field :grade, value: user_lesson.grade, class: "form-control" %>
+            </td>
+            <td><%= form.check_box :attendance, checked: user_lesson.attendance %></td>
+            <td><%= form.submit "Update", class: "btn btn-primary" %></td>
+           <% end %>
+        </td>
+      </tr>
+    <% end %>
+  <% end %>
+  </tbody>
+</table>

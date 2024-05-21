@@ -1,0 +1,49 @@
+<h1>Online courses websites</h1>
+
+<table class="table">
+  <tbody>
+  <% if current_user_admin? %>
+    <p>Ви увійшли як адміністратор</p>
+  <% else %>
+    <p>Ви увійшли як звичайний користувач</p>
+  <% end %>
+  <tr>
+    <td>Індекс</td>
+    <td>Курс</td>
+    <td>Викладач</td>
+    <td></td>
+  </tr>
+  <% @business_models.each_with_index do |model, index| %>
+      <td><%= index + 1 %></td>
+      <td><%= link_to model.name, business_model_path(model.id), class: "nav-link px-2 link-secondary fw-bold text-primary" %></td>
+      <td><%= model.user&.email %>
+    <% if current_user_admin? %>
+      <td><%= button_to "Почати викладати", user_start_teaching_path(current_user.id, model_id: model.id), class: "nav-link px-2 link-secondary fw-bold text-primary" %></td>
+      <td><%= button_to "Видалити курс", business_model_path(model.id), method: :delete, class: "nav-link px-2 link-secondary fw-bold text-primary" %></td>
+    <% else %>
+      <% unless model.enrollments.exists?(user_id: current_user.id) %>
+        <td><%= button_to "Записатися на курс", enrollments_path(user_id: current_user.id, model_id: model.id), class: "nav-link px-2 link-secondary fw-bold text-primary" %></td>
+      <% else %>
+        <% enrollment_id = Enrollment.where(user_id: current_user.id, business_model_id: model.id).first.id %>
+        <td><%= button_to "Виписатися з курсу", enrollment_path(enrollment_id), method: :delete, class: "nav-link px-2 link-secondary fw-bold text-primary" %></td>
+      <% end %>
+    <% end %>
+      </td>
+    </tr>
+  <% end %>
+  <% if current_user_admin? %>
+    <%= form_with model: BusinessModel.new, local: true do |form| %>
+      <%= fields_for :business_models do |business_model_fields| %>
+        <tr><td><div class="field">
+          <%= business_model_fields.label :name, "Business Model Name" %>
+          <%= business_model_fields.text_field :name, class: "form-control" %>
+        </div>
+        <td><div class="actions">
+          <%= form.submit "Create Business Model", class: "btn btn-primary" %>
+        </div></tr>
+      <% end %>
+    <% end %>
+  <% end %>
+  </tbody>
+</table>
+
